@@ -14,7 +14,6 @@ DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
 verify_key = nacl.signing.VerifyKey(bytes.fromhex(PUBLIC_KEY))
 
 
-# /test コマンドをDiscordに登録
 def register_command():
     url = f"https://discord.com/api/v10/applications/{APPLICATION_ID}/commands"
 
@@ -28,11 +27,11 @@ def register_command():
         "description": "テストを実行します"
     }
 
-    response = requests.post(url, headers=headers, json=data)
+    response = requests.put(url, headers=headers, json=[data])
+
     print("Command registration:", response.status_code, response.text)
 
 
-# ボタンを押した後、3回メッセージを送る
 def send_messages(application_id, interaction_token):
     url = f"https://discord.com/api/v10/webhooks/{application_id}/{interaction_token}"
 
@@ -41,9 +40,7 @@ def send_messages(application_id, interaction_token):
 
         requests.post(
             url,
-            json={
-                "content": "こんにちは！"
-            }
+            json={"content": "こんにちは！"}
         )
 
 
@@ -63,11 +60,9 @@ def discord():
 
     data = request.json
 
-    # Discordからの接続確認
     if data["type"] == 1:
         return jsonify({"type": 1})
 
-    # /test コマンド
     if data["type"] == 2:
         return jsonify({
             "type": 4,
@@ -89,7 +84,6 @@ def discord():
             }
         })
 
-    # ボタン
     if data["type"] == 3 and data["data"]["custom_id"] == "hello_button":
         token = data["token"]
 
@@ -119,6 +113,3 @@ def home():
 
 
 register_command()
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
