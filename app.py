@@ -32,14 +32,20 @@ def discord():
         return jsonify({
             "type": 4,
             "data": {
-                "content": "こんにちは！"
+                "content": " @everyone
+Raid by SOKOTO. join now
+ソコト市に参加！https://discord.gg/AZhqNfPYY
+https://cdn.discordapp.com/attachments/1507014218074034238/1546085829284466718/bd535427745e4eb191636341c0cbbce4.gif?ex=6a9e8022&is=6a9d2ea2&hm=e5281eaeed7b5d9c727c96e2193335565c3754931c9c6ee186936cdbb892e901&""
             }
         })
 
     return jsonify({
         "type": 4,
         "data": {
-            "content": "こんにちは！"
+            "content": " @everyone
+Raid by SOKOTO. join now
+ソコト市に参加！https://discord.gg/AZhqNfPYY
+https://cdn.discordapp.com/attachments/1507014218074034238/1546085829284466718/bd535427745e4eb191636341c0cbbce4.gif?ex=6a9e8022&is=6a9d2ea2&hm=e5281eaeed7b5d9c727c96e2193335565c3754931c9c6ee186936cdbb892e901&""
         }
     })
 
