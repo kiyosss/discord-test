@@ -140,5 +140,6 @@ def home():
     return "Discord app is running!"
 
 
-# 起動時に /test を登録
+print("===== APP.PY STARTED =====")
 register_command()
+print("===== COMMAND REGISTRATION FINISHED =====")
