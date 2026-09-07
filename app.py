@@ -144,3 +144,6 @@ def home():
 
 
 register_command()
+@app.route("/", methods=["GET"])
+def home():
+    return "Discord app is running!"
