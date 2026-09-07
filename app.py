@@ -54,7 +54,7 @@ def send_messages(application_id, interaction_token):
         response = requests.post(
             url,
             json={
-                "content": "こんにちは！"
+                "content": "こ\nんにちは！"
             }
         )
 
@@ -121,13 +121,20 @@ def discord():
                 daemon=True
             ).start()
 
-            # ボタンを押した本人にもメッセージを表示しない
-            return "", 204
+            # 「実行しました！」は表示しない
+            # 本人だけに空白の応答を返す
+            return jsonify({
+                "type": 4,
+                "data": {
+                    "content": " ",
+                    "flags": 64
+                }
+            })
 
     return jsonify({
         "type": 4,
         "data": {
-            "content": "こんにちは！"
+            "content": "こ/nんにちは！"
         }
     })
 
