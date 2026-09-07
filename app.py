@@ -118,6 +118,7 @@ def home():
     return "Discord app is running!"
 
 
+register_command()
+
 if __name__ == "__main__":
-    register_command()
     app.run(host="0.0.0.0", port=10000)
