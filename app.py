@@ -15,6 +15,10 @@ verify_key = nacl.signing.VerifyKey(bytes.fromhex(PUBLIC_KEY))
 
 
 def register_command():
+    if not DISCORD_TOKEN:
+        print("ERROR: DISCORD_TOKEN is not set")
+        return
+
     url = f"https://discord.com/api/v10/applications/{APPLICATION_ID}/commands"
 
     headers = {
@@ -22,33 +26,50 @@ def register_command():
         "Content-Type": "application/json"
     }
 
-    data = {
-        "name": "test",
-        "description": "テストを実行します"
-    }
+    commands = [
+        {
+            "name": "test",
+            "description": "テストを実行します",
+            "integration_types": [1],
+            "contexts": [0, 1, 2]
+        }
+    ]
 
-    response = requests.put(url, headers=headers, json=[data])
+    response = requests.put(
+        url,
+        headers=headers,
+        json=commands
+    )
 
-    print("Command registration:", response.status_code, response.text)
+    print("COMMAND REGISTRATION STATUS:", response.status_code)
+    print("COMMAND REGISTRATION RESPONSE:", response.text)
 
 
 def send_messages(application_id, interaction_token):
     url = f"https://discord.com/api/v10/webhooks/{application_id}/{interaction_token}"
 
-    for i in range(3):
+    for _ in range(3):
         time.sleep(1)
 
-        requests.post(
+        response = requests.post(
             url,
-            json={"content": "こんにちは！"}
+            json={
+                "content": "こんにちは！"
+            }
         )
+
+        print("MESSAGE STATUS:", response.status_code)
 
 
 @app.route("/discord", methods=["POST"])
 def discord():
+
     signature = request.headers.get("X-Signature-Ed25519")
     timestamp = request.headers.get("X-Signature-Timestamp")
     body = request.data
+
+    if not signature or not timestamp:
+        return "Bad Request", 401
 
     try:
         verify_key.verify(
@@ -56,14 +77,19 @@ def discord():
             bytes.fromhex(signature)
         )
     except Exception:
-        return "invalid request signature", 401
+        return "Invalid request signature", 401
 
-    data = request.json
+    data = request.get_json()
 
+    # Discordの接続確認
     if data["type"] == 1:
-        return jsonify({"type": 1})
+        return jsonify({
+            "type": 1
+        })
 
-    if data["type"] == 2:
+    # /test
+    if data["type"] == 2 and data["data"]["name"] == "test":
+
         return jsonify({
             "type": 4,
             "data": {
@@ -84,20 +110,22 @@ def discord():
             }
         })
 
-    if data["type"] == 3 and data["data"]["custom_id"] == "hello_button":
-        token = data["token"]
+    # 実行ボタン
+    if data["type"] == 3:
+        if data["data"]["custom_id"] == "hello_button":
 
-        threading.Thread(
-            target=send_messages,
-            args=(APPLICATION_ID, token)
-        ).start()
+            threading.Thread(
+                target=send_messages,
+                args=(APPLICATION_ID, data["token"]),
+                daemon=True
+            ).start()
 
-        return jsonify({
-            "type": 4,
-            "data": {
-                "content": "実行しました！"
-            }
-        })
+            return jsonify({
+                "type": 4,
+                "data": {
+                    "content": "実行しました！"
+                }
+            })
 
     return jsonify({
         "type": 4,
@@ -107,9 +135,10 @@ def discord():
     })
 
 
-@app.route("/")
+@app.route("/", methods=["GET"])
 def home():
     return "Discord app is running!"
 
 
+# 起動時に /test を登録
 register_command()
