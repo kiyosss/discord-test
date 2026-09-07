@@ -54,8 +54,7 @@ def send_messages(application_id, interaction_token):
         response = requests.post(
             url,
             json={
-                "content": "# @everyone　# Raid by SOKOTO. join now　# ソコト市に参加！　# https://discord.gg/AZhqNfPYY
-https://cdn.discordapp.com/attachments/1507014218074034238/1546085829284466718/bd535427745e4eb191636341c0cbbce4.gif?ex=6a9e8022&is=6a9d2ea2&hm=e5281eaeed7b5d9c727c96e2193335565c3754931c9c6ee186936cdbb892e901&"
+                "content": "こんにちは！"
             }
         )
 
@@ -95,6 +94,7 @@ def discord():
             "type": 4,
             "data": {
                 "content": "テスト開始！",
+                "flags": 64,
                 "components": [
                     {
                         "type": 1,
@@ -121,19 +121,13 @@ def discord():
                 daemon=True
             ).start()
 
-            return jsonify({
-    "type": 4,
-    "data": {
-        "content": "実行しました！",
-        "flags": 64
-    }
-})
+            # ボタンを押した本人にもメッセージを表示しない
+            return "", 204
 
     return jsonify({
         "type": 4,
         "data": {
-            "content": "# @everyone　# Raid by SOKOTO. join now　# ソコト市に参加！　# https://discord.gg/AZhqNfPYY
-https://cdn.discordapp.com/attachments/1507014218074034238/1546085829284466718/bd535427745e4eb191636341c0cbbce4.gif?ex=6a9e8022&is=6a9d2ea2&hm=e5281eaeed7b5d9c727c96e2193335565c3754931c9c6ee186936cdbb892e901&"
+            "content": "こんにちは！"
         }
     })
 
