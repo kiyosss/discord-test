@@ -121,20 +121,15 @@ def discord():
                 daemon=True
             ).start()
 
-            # 「実行しました！」は表示しない
-            # 本人だけに空白の応答を返す
+            # ボタンへの応答
             return jsonify({
-                "type": 4,
-                "data": {
-                    "content": " ",
-                    "flags": 64
-                }
+                "type": 6
             })
 
     return jsonify({
         "type": 4,
         "data": {
-            "content": "こ/nんにちは！"
+            "content": "こ\nんにちは！"
         }
     })
 
@@ -144,5 +139,4 @@ def home():
     return "Discord app is running!"
 
 
-# 起動時に /test を登録
 register_command()
