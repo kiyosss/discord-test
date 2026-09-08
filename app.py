@@ -5,7 +5,7 @@ import requests
 import threading
 import time
 
-app = Flask(name)
+app = Flask(__name__)
 
 PUBLIC_KEY = "7ff356b89d1ae3cb67e1eb9ff04ff5017eb743c2c470ae4c12b5d9254e522cc1"
 APPLICATION_ID = "1546095227943649380"
