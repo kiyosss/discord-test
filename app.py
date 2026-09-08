@@ -45,7 +45,9 @@ def register_command():
     print("COMMAND REGISTRATION RESPONSE:", response.text)
 
 
-def send_messages(application_id, interaction_token):
+
+
+        def send_messages(application_id, interaction_token):
     url = f"https://discord.com/api/v10/webhooks/{application_id}/{interaction_token}"
 
     print("SEND_MESSAGES START")
@@ -64,10 +66,16 @@ def send_messages(application_id, interaction_token):
                         "parse": []
                     }
                 },
-                timeout=10
+                timeout=5
             )
 
             print("MESSAGE STATUS:", response.status_code)
+            print("MESSAGE RESPONSE:", response.text)
+
+        except Exception as e:
+            print("SEND ERROR:", repr(e))
+
+    print("SEND_MESSAGES END")
             print("MESSAGE RESPONSE:", response.text)
 
         except Exception as e:
