@@ -14,7 +14,7 @@ DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
 verify_key = nacl.signing.VerifyKey(bytes.fromhex(PUBLIC_KEY))
 
 def register_command():
-if not DISCORD_TOKEN:
+if    not DISCORD_TOKEN:
 print("ERROR: DISCORD_TOKEN is not set")
 return
 
