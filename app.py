@@ -48,20 +48,32 @@ def register_command():
 def send_messages(application_id, interaction_token):
     url = f"https://discord.com/api/v10/webhooks/{application_id}/{interaction_token}"
 
-    for _ in range(3):
+    print("SEND_MESSAGES START")
+
+    for i in range(3):
         time.sleep(1)
 
-        response = requests.post(
-            url,
-            json={
-                "content": "こんにちは！",
-                "allowed_mentions": {
-                    "parse": []
-                }
-            }
-        )
+        print("SENDING MESSAGE:", i + 1)
 
-        print("MESSAGE STATUS:", response.status_code)
+        try:
+            response = requests.post(
+                url,
+                json={
+                    "content": "こんにちは！",
+                    "allowed_mentions": {
+                        "parse": []
+                    }
+                },
+                timeout=10
+            )
+
+            print("MESSAGE STATUS:", response.status_code)
+            print("MESSAGE RESPONSE:", response.text)
+
+        except Exception as e:
+            print("SEND ERROR:", repr(e))
+
+    print("SEND_MESSAGES END")
 
 
 @app.route("/discord", methods=["POST"])
