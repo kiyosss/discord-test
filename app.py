@@ -61,8 +61,7 @@ print("RETRY AFTER:", response.headers.get("Retry-After"))
 
 @app.route("/discord", methods=["POST"])
 def discord():
-
-signature = request.headers.get("X-Signature-Ed25519")
+    signature = request.headers.get("X-Signature-Ed25519")")
 timestamp = request.headers.get("X-Signature-Timestamp")
 body = request.data
 
