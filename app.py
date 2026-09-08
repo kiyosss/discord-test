@@ -2,6 +2,8 @@ from flask import Flask, request, jsonify
 import nacl.signing
 import os
 import requests
+import threading
+import time
 
 app = Flask(__name__)
 
@@ -10,14 +12,94 @@ APPLICATION_ID = "1546095227943649380"
 DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
 
 # ==============================
-# 送信回数
+# ここを変更すると送信回数を変更できます
 # ==============================
-SEND_COUNT = 1
+SEND_COUNT = 2
 
 # 送信間隔（秒）
 SEND_INTERVAL = 1
 
 verify_key = nacl.signing.VerifyKey(bytes.fromhex(PUBLIC_KEY))
+
+
+def register_command():
+    if not DISCORD_TOKEN:
+        print("ERROR: DISCORD_TOKEN is not set", flush=True)
+        return
+
+    url = f"https://discord.com/api/v10/applications/{APPLICATION_ID}/commands"
+
+    headers = {
+        "Authorization": f"Bot {DISCORD_TOKEN}",
+        "Content-Type": "application/json"
+    }
+
+    commands = [
+        {
+            "name": "test",
+            "description": "テストを実行します",
+            "integration_types": [1],
+            "contexts": [0, 1, 2]
+        }
+    ]
+
+    response = requests.put(
+        url,
+        headers=headers,
+        json=commands,
+        timeout=10
+    )
+
+    print(
+        "COMMAND REGISTRATION STATUS:",
+        response.status_code,
+        flush=True
+    )
+
+    print(
+        "COMMAND REGISTRATION RESPONSE:",
+        response.text,
+        flush=True
+    )
+
+
+def send_messages(application_id, interaction_token):
+    print("=== SEND_MESSAGES STARTED ===", flush=True)
+
+    url = f"https://discord.com/api/v10/webhooks/{application_id}/{interaction_token}"
+
+    for i in range(SEND_COUNT):
+        response = requests.post(
+            url,
+            json={
+                "content": "こんにちは！",
+                "allowed_mentions": {
+                    "parse": []
+                }
+            },
+            timeout=10
+        )
+
+        print(
+            f"MESSAGE {i + 1}/{SEND_COUNT} STATUS:",
+            response.status_code,
+            flush=True
+        )
+
+        print(
+            "MESSAGE RESPONSE:",
+            response.text,
+            flush=True
+        )
+
+        print(
+            "RETRY AFTER:",
+            response.headers.get("Retry-After"),
+            flush=True
+        )
+
+        if i < SEND_COUNT - 1:
+            time.sleep(SEND_INTERVAL)
 
 
 @app.route("/discord", methods=["POST"])
@@ -84,15 +166,19 @@ def discord():
 
         if custom_id == "hello_button":
 
+            print(
+                f"=== SENDING {SEND_COUNT} MESSAGE(S) ===",
+                flush=True
+            )
+
+            threading.Thread(
+                target=send_messages,
+                args=(APPLICATION_ID, data["token"]),
+                daemon=True
+            ).start()
+
             return jsonify({
-                "type": 4,
-                "data": {
-                    "content": "こんにちは！",
-                    "allowed_mentions": {
-                        "parse": []
-                    }
-                }
-        
+                "type": 6
             })
 
     return jsonify({
@@ -111,6 +197,10 @@ def home():
     return "Discord app is running!"
 
 
+# 429回避のため一旦コメントアウト
+# register_command()
+
+
 if __name__ == "__main__":
     print("=== SERVER STARTING ===", flush=True)
 
@@ -118,4 +208,3 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=int(os.environ.get("PORT", 5000))
     )
-    # register_command()
