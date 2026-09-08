@@ -149,5 +149,5 @@ def home():
     return "Discord app is running!"
 
 
-# コマンド登録は429対策で停止中
+# 1015対策：起動時のコマンド登録を停止
 # register_command()
