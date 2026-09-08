@@ -14,9 +14,9 @@ DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
 verify_key = nacl.signing.VerifyKey(bytes.fromhex(PUBLIC_KEY))
 
 def register_command():
-if    not DISCORD_TOKEN:
-print("ERROR: DISCORD_TOKEN is not set")
-return
+　　　　if not DISCORD_TOKEN:
+　　　　　　　　　print("ERROR: DISCORD_TOKEN is not set")
+　　　  　　　return
 
 url = f"https://discord.com/api/v10/applications/{APPLICATION_ID}/commands"
 
