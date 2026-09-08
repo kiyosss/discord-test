@@ -58,6 +58,7 @@ response = requests.post(
 
 print("MESSAGE STATUS:", response.status_code)
 print("MESSAGE RESPONSE:", response.text)
+print("RETRY AFTER:", response.headers.get("Retry-After"))
 
 @app.route("/discord", methods=["POST"])
 def discord():
