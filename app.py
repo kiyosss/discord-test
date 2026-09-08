@@ -11,9 +11,6 @@ PUBLIC_KEY = "7ff356b89d1ae3cb67e1eb9ff04ff5017eb743c2c470ae4c12b5d9254e522cc1"
 APPLICATION_ID = "1546095227943649380"
 DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
 
-# ← ここを変えると送信回数を変更できます
-SEND_COUNT = 3
-
 verify_key = nacl.signing.VerifyKey(bytes.fromhex(PUBLIC_KEY))
 
 
@@ -51,26 +48,26 @@ def register_command():
 def send_messages(application_id, interaction_token):
     url = f"https://discord.com/api/v10/webhooks/{application_id}/{interaction_token}"
 
-    for i in range(SEND_COUNT):
+    for i in range(5):  # ← ここが送信回数
+        time.sleep(1)
+
         response = requests.post(
             url,
             json={
-                "content": "こんにちは！",
+                "content": "テストメッセージ",
                 "allowed_mentions": {
                     "parse": []
                 }
             }
         )
 
-        print(f"MESSAGE {i + 1}/{SEND_COUNT} STATUS:", response.status_code)
+        print("MESSAGE STATUS:", response.status_code)
         print("MESSAGE RESPONSE:", response.text)
-
-        # 連続送信によるレート制限を避けるため少し待つ
-        time.sleep(1)
 
 
 @app.route("/discord", methods=["POST"])
 def discord():
+
     signature = request.headers.get("X-Signature-Ed25519")
     timestamp = request.headers.get("X-Signature-Timestamp")
     body = request.data
@@ -96,6 +93,7 @@ def discord():
 
     # /test
     if data["type"] == 2 and data["data"]["name"] == "test":
+
         return jsonify({
             "type": 4,
             "data": {
@@ -119,9 +117,9 @@ def discord():
 
     # 実行ボタン
     if data["type"] == 3:
+
         if data["data"]["custom_id"] == "hello_button":
 
-            # バックグラウンドで送信
             threading.Thread(
                 target=send_messages,
                 args=(APPLICATION_ID, data["token"]),
@@ -148,5 +146,13 @@ def home():
     return "Discord app is running!"
 
 
-# コマンド登録が必要なときだけ実行
+# コマンド登録
+# 429が出ている場合はコメントアウトしたままにする
 # register_command()
+
+
+if __name__ == "__main__":
+    app.run(
+        host="0.0.0.0",
+        port=int(os.environ.get("PORT", 5000))
+    )
