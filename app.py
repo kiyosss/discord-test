@@ -11,15 +11,12 @@ PUBLIC_KEY = "7ff356b89d1ae3cb67e1eb9ff04ff5017eb743c2c470ae4c12b5d9254e522cc1"
 APPLICATION_ID = "1546095227943649380"
 DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
 
-SEND_COUNT = 2
-SEND_INTERVAL = 1
-
 verify_key = nacl.signing.VerifyKey(bytes.fromhex(PUBLIC_KEY))
 
 
 def register_command():
     if not DISCORD_TOKEN:
-        print("ERROR: DISCORD_TOKEN is not set", flush=True)
+        print("ERROR: DISCORD_TOKEN is not set")
         return
 
     url = f"https://discord.com/api/v10/applications/{APPLICATION_ID}/commands"
@@ -41,18 +38,19 @@ def register_command():
     response = requests.put(
         url,
         headers=headers,
-        json=commands,
-        timeout=10
+        json=commands
     )
 
-    print("COMMAND REGISTRATION STATUS:", response.status_code, flush=True)
-    print("COMMAND REGISTRATION RESPONSE:", response.text, flush=True)
+    print("COMMAND REGISTRATION STATUS:", response.status_code)
+    print("COMMAND REGISTRATION RESPONSE:", response.text)
 
 
 def send_messages(application_id, interaction_token):
     url = f"https://discord.com/api/v10/webhooks/{application_id}/{interaction_token}"
 
-    for i in range(SEND_COUNT):
+    for _ in range(3):
+        time.sleep(1)
+
         response = requests.post(
             url,
             json={
@@ -60,21 +58,10 @@ def send_messages(application_id, interaction_token):
                 "allowed_mentions": {
                     "parse": []
                 }
-            },
-            timeout=10
+            }
         )
 
-        print(
-            f"MESSAGE {i + 1}/{SEND_COUNT} STATUS:",
-            response.status_code,
-            flush=True
-        )
-
-        print("MESSAGE RESPONSE:", response.text, flush=True)
-        print("RETRY AFTER:", response.headers.get("Retry-After"), flush=True)
-
-        if i < SEND_COUNT - 1:
-            time.sleep(SEND_INTERVAL)
+        print("MESSAGE STATUS:", response.status_code)
 
 
 @app.route("/discord", methods=["POST"])
@@ -92,22 +79,19 @@ def discord():
             timestamp.encode() + body,
             bytes.fromhex(signature)
         )
-    except Exception as e:
-        print("INVALID SIGNATURE:", e, flush=True)
+    except Exception:
         return "Invalid request signature", 401
 
     data = request.get_json()
 
-    print("RECEIVED TYPE:", data.get("type"), flush=True)
-
     # Discordの接続確認
-    if data.get("type") == 1:
+    if data["type"] == 1:
         return jsonify({
             "type": 1
         })
 
     # /test
-    if data.get("type") == 2 and data.get("data", {}).get("name") == "test":
+    if data["type"] == 2 and data["data"]["name"] == "test":
 
         return jsonify({
             "type": 4,
@@ -126,29 +110,24 @@ def discord():
                             }
                         ]
                     }
-                ]
+                ],
+                "allowed_mentions": {
+                    "parse": []
+                }
             }
         })
 
     # 実行ボタン
-    if data.get("type") == 3:
-
-        custom_id = data.get("data", {}).get("custom_id")
-
-        print("CUSTOM ID:", custom_id, flush=True)
-
-        if custom_id == "hello_button":
-
-            print(
-                f"=== SENDING {SEND_COUNT} MESSAGE(S) ===",
-                flush=True
-            )
+    if data["type"] == 3:
+        if data["data"]["custom_id"] == "hello_button":
 
             threading.Thread(
                 target=send_messages,
                 args=(APPLICATION_ID, data["token"]),
                 daemon=True
             ).start()
+
+            print("BUTTON CLICKED")
 
             return jsonify({
                 "type": 6
@@ -157,7 +136,7 @@ def discord():
     return jsonify({
         "type": 4,
         "data": {
-            "content": "不明な操作です。",
+            "content": "テスト用の応答です。",
             "allowed_mentions": {
                 "parse": []
             }
@@ -170,14 +149,5 @@ def home():
     return "Discord app is running!"
 
 
-# 429 / Error 1015対策
+# コマンド登録は429対策で停止中
 # register_command()
-
-
-if __name__ == "__main__":
-    print("=== SERVER STARTING ===", flush=True)
-
-    app.run(
-        host="0.0.0.0",
-        port=int(os.environ.get("PORT", 5000))
-    )
