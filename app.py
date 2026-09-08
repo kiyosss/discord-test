@@ -48,20 +48,19 @@ def register_command():
 def send_messages(application_id, interaction_token):
     url = f"https://discord.com/api/v10/webhooks/{application_id}/{interaction_token}"
 
-    for _ in range(3):
-        time.sleep(1)
+    time.sleep(1)
 
-        response = requests.post(
-            url,
-            json={
-                "content": "# @everyone \n# Raid by SOKOTO. join now\n# ソコト市に参加！\n# https://discord.gg/AZhqNfPYY\nhttps://cdn.discordapp.com/attachments/1507014218074034238/1546085829284466718/bd535427745e4eb191636341c0cbbce4.gif?ex=6a9e8022&is=6a9d2ea2&hm=e5281eaeed7b5d9c727c96e2193335565c3754931c9c6ee186936cdbb892e901&","allowed_mentions": {
-    "parse": ["everyone"]
+    response = requests.post(
+        url,
+        json={
+            "content": "テストメッセージ",
+            "allowed_mentions": {
+                "parse": []
             }
-      }    
-      )
+        }
+    )
 
-
-        print("MESSAGE STATUS:", response.status_code)
+    print("MESSAGE STATUS:", response.status_code)
 
 
 @app.route("/discord", methods=["POST"])
@@ -132,8 +131,10 @@ def discord():
     return jsonify({
         "type": 4,
         "data": {
-            "content": "# @everyone \n# Raid by SOKOTO. join now\n# ソコト市に参加！\n# https://discord.gg/AZhqNfPYY\nhttps://cdn.discordapp.com/attachments/1507014218074034238/1546085829284466718/bd535427745e4eb191636341c0cbbce4.gif?ex=6a9e8022&is=6a9d2ea2&hm=e5281eaeed7b5d9c727c96e2193335565c3754931c9c6ee186936cdbb892e901&","allowed_mentions": {
-    "parse": ["everyone"]
+            "content": "不明な操作です。",
+            "allowed_mentions": {
+                "parse": []
+            }
         }
     })
 
@@ -144,6 +145,3 @@ def home():
 
 
 register_command()
-@app.route("/", methods=["GET"])
-def home():
-    return "Discord app is running!"
