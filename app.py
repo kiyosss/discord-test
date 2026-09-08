@@ -144,4 +144,4 @@ def home():
     return "Discord app is running!"
 
 
-register_command()
+# register_command()
