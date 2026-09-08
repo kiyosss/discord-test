@@ -61,79 +61,77 @@ print("RETRY AFTER:", response.headers.get("Retry-After"))
 
 @app.route("/discord", methods=["POST"])
 def discord():
-    signature = request.headers.get("X-Signature-Ed25519")")
-timestamp = request.headers.get("X-Signature-Timestamp")
-body = request.data
+    signature = request.headers.get("X-Signature-Ed25519")
+    timestamp = request.headers.get("X-Signature-Timestamp")
+    body = request.data
 
-if not signature or not timestamp:
-    return "Bad Request", 401
+    if not signature or not timestamp:
+        return "Bad Request", 401
 
-try:
-    verify_key.verify(
-        timestamp.encode() + body,
-        bytes.fromhex(signature)
-    )
-except Exception:
-    return "Invalid request signature", 401
+    try:
+        verify_key.verify(
+            timestamp.encode() + body,
+            bytes.fromhex(signature)
+        )
+    except Exception:
+        return "Invalid request signature", 401
 
-data = request.get_json()
+    data = request.get_json()
 
-if data["type"] == 1:
-    return jsonify({
-        "type": 1
-    })
+    if data["type"] == 1:
+        return jsonify({
+            "type": 1
+        })
 
-if data["type"] == 2 and data["data"]["name"] == "test":
+    if data["type"] == 2 and data["data"]["name"] == "test":
+        return jsonify({
+            "type": 4,
+            "data": {
+                "content": "テスト開始！",
+                "flags": 64,
+                "components": [
+                    {
+                        "type": 1,
+                        "components": [
+                            {
+                                "type": 2,
+                                "style": 1,
+                                "label": "実行",
+                                "custom_id": "hello_button"
+                            }
+                        ]
+                    }
+                ]
+            }
+        })
+
+    if data["type"] == 3:
+        if data["data"]["custom_id"] == "hello_button":
+            return jsonify({
+                "type": 4,
+                "data": {
+                    "content": "こんにちは！",
+                    "allowed_mentions": {
+                        "parse": []
+                    }
+                }
+            })
 
     return jsonify({
         "type": 4,
         "data": {
-            "content": "テスト開始！",
-            "flags": 64,
-            "components": [
-                {
-                    "type": 1,
-                    "components": [
-                        {
-                            "type": 2,
-                            "style": 1,
-                            "label": "実行",
-                            "custom_id": "hello_button"
-                        }
-                    ]
-                }
-            ]
+            "content": "不明な操作です。",
+            "allowed_mentions": {
+                "parse": []
+            }
         }
     })
 
-if data["type"] == 3:
-    if data["data"]["custom_id"] == "hello_button":
-
-        return jsonify({
-            "type": 4,
-            "data": {
-                "content": "こんにちは！",
-                "flags": 64,
-                "allowed_mentions": {
-                    "parse": []
-                }
-            }
-        })
-
-return jsonify({
-    "type": 4,
-    "data": {
-        "content": "不明な操作です。",
-        "allowed_mentions": {
-            "parse": []
-        }
-    }
-})
 
 @app.route("/", methods=["GET"])
 def home():
-return "Discord app is running!"
+    return "Discord app is running!"
 
-429回避のため一旦コメントアウト
 
-register_command()
+# 429回避のため一旦コメントアウト
+# register_command()
