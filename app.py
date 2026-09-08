@@ -11,62 +11,54 @@ PUBLIC_KEY = "7ff356b89d1ae3cb67e1eb9ff04ff5017eb743c2c470ae4c12b5d9254e522cc1"
 APPLICATION_ID = "1546095227943649380"
 DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
 
+# ==============================
+# ここを変更すると送信回数を変更できます
+# ==============================
+SEND_COUNT = 3
+
+# 送信間隔（秒）
+SEND_INTERVAL = 1
+
 verify_key = nacl.signing.VerifyKey(bytes.fromhex(PUBLIC_KEY))
 
 
-def register_command():
-    if not DISCORD_TOKEN:
-        print("ERROR: DISCORD_TOKEN is not set")
-        return
-
-    url = f"https://discord.com/api/v10/applications/{APPLICATION_ID}/commands"
-
-    headers = {
-        "Authorization": f"Bot {DISCORD_TOKEN}",
-        "Content-Type": "application/json"
-    }
-
-    commands = [
-        {
-            "name": "test",
-            "description": "テストを実行します",
-            "integration_types": [1],
-            "contexts": [0, 1, 2]
-        }
-    ]
-
-    response = requests.put(
-        url,
-        headers=headers,
-        json=commands
-    )
-
-    print("COMMAND REGISTRATION STATUS:", response.status_code)
-    print("COMMAND REGISTRATION RESPONSE:", response.text)
-
-
 def send_messages(application_id, interaction_token):
+    print("=== SEND_MESSAGES STARTED ===", flush=True)
+
     url = f"https://discord.com/api/v10/webhooks/{application_id}/{interaction_token}"
 
-    for i in range(3):  # ← ここが送信回数
-        time.sleep(1)
-
+    for i in range(SEND_COUNT):
         response = requests.post(
             url,
             json={
-                "content": "テストメッセージ",
+                "content": "# テストメッセージ",
                 "allowed_mentions": {
-                    "parse": []
+                    "parse": ["everyone"]
                 }
-            }
+            },
+            timeout=10
         )
 
-        print("MESSAGE STATUS:", response.status_code)
-        print("MESSAGE RESPONSE:", response.text)
+        print(
+            f"MESSAGE {i + 1}/{SEND_COUNT} STATUS:",
+            response.status_code,
+            flush=True
+        )
+        print(
+            "MESSAGE RESPONSE:",
+            response.text,
+            flush=True
+        )
+
+        # 次の送信まで待つ
+        if i < SEND_COUNT - 1:
+            time.sleep(SEND_INTERVAL)
 
 
 @app.route("/discord", methods=["POST"])
 def discord():
+
+    print("=== DISCORD REQUEST RECEIVED ===", flush=True)
 
     signature = request.headers.get("X-Signature-Ed25519")
     timestamp = request.headers.get("X-Signature-Timestamp")
@@ -80,19 +72,22 @@ def discord():
             timestamp.encode() + body,
             bytes.fromhex(signature)
         )
-    except Exception:
+    except Exception as e:
+        print("INVALID SIGNATURE:", e, flush=True)
         return "Invalid request signature", 401
 
     data = request.get_json()
 
+    print("RECEIVED TYPE:", data.get("type"), flush=True)
+
     # Discordの接続確認
-    if data["type"] == 1:
+    if data.get("type") == 1:
         return jsonify({
             "type": 1
         })
 
     # /test
-    if data["type"] == 2 and data["data"]["name"] == "test":
+    if data.get("type") == 2 and data.get("data", {}).get("name") == "test":
 
         return jsonify({
             "type": 4,
@@ -116,9 +111,18 @@ def discord():
         })
 
     # 実行ボタン
-    if data["type"] == 3:
+    if data.get("type") == 3:
 
-        if data["data"]["custom_id"] == "hello_button":
+        custom_id = data.get("data", {}).get("custom_id")
+
+        print("CUSTOM ID:", custom_id, flush=True)
+
+        if custom_id == "hello_button":
+
+            print(
+                f"=== SENDING {SEND_COUNT} MESSAGE(S) ===",
+                flush=True
+            )
 
             threading.Thread(
                 target=send_messages,
@@ -146,12 +150,9 @@ def home():
     return "Discord app is running!"
 
 
-# コマンド登録
-# 429が出ている場合はコメントアウトしたままにする
-# register_command()
-
-
 if __name__ == "__main__":
+    print("=== SERVER STARTING ===", flush=True)
+
     app.run(
         host="0.0.0.0",
         port=int(os.environ.get("PORT", 5000))
