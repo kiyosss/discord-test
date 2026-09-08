@@ -2,8 +2,6 @@ from flask import Flask, request, jsonify
 import nacl.signing
 import os
 import requests
-import threading
-import time
 
 app = Flask(__name__)
 
@@ -12,47 +10,14 @@ APPLICATION_ID = "1546095227943649380"
 DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
 
 # ==============================
-# ここを変更すると送信回数を変更できます
+# 送信回数
 # ==============================
-SEND_COUNT = 3
+SEND_COUNT = 1
 
 # 送信間隔（秒）
 SEND_INTERVAL = 1
 
 verify_key = nacl.signing.VerifyKey(bytes.fromhex(PUBLIC_KEY))
-
-
-def send_messages(application_id, interaction_token):
-    print("=== SEND_MESSAGES STARTED ===", flush=True)
-
-    url = f"https://discord.com/api/v10/webhooks/{application_id}/{interaction_token}"
-
-    for i in range(SEND_COUNT):
-        response = requests.post(
-            url,
-            json={
-                "content": "# テストメッセージ",
-                "allowed_mentions": {
-                    "parse": ["everyone"]
-                }
-            },
-            timeout=10
-        )
-
-        print(
-            f"MESSAGE {i + 1}/{SEND_COUNT} STATUS:",
-            response.status_code,
-            flush=True
-        )
-        print(
-            "MESSAGE RESPONSE:",
-            response.text,
-            flush=True
-        )
-
-        # 次の送信まで待つ
-        if i < SEND_COUNT - 1:
-            time.sleep(SEND_INTERVAL)
 
 
 @app.route("/discord", methods=["POST"])
@@ -119,19 +84,15 @@ def discord():
 
         if custom_id == "hello_button":
 
-            print(
-                f"=== SENDING {SEND_COUNT} MESSAGE(S) ===",
-                flush=True
-            )
-
-            threading.Thread(
-                target=send_messages,
-                args=(APPLICATION_ID, data["token"]),
-                daemon=True
-            ).start()
-
             return jsonify({
-                "type": 6
+                "type": 4,
+                "data": {
+                    "content": "こんにちは！",
+                    "allowed_mentions": {
+                        "parse": []
+                    }
+                }
+        
             })
 
     return jsonify({
@@ -157,3 +118,4 @@ if __name__ == "__main__":
         host="0.0.0.0",
         port=int(os.environ.get("PORT", 5000))
     )
+    # register_command()
