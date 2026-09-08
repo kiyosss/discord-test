@@ -44,6 +44,7 @@ print("COMMAND REGISTRATION STATUS:", response.status_code)
 print("COMMAND REGISTRATION RESPONSE:", response.text)
 
 def send_messages(application_id, interaction_token):
+    pass
 url = f"https://discord.com/api/v10/webhooks/{application_id}/{interaction_token}"
 
 response = requests.post(
