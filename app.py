@@ -3,7 +3,6 @@ import nacl.signing
 import os
 import requests
 import threading
-import time
 
 app = Flask(__name__)
 
@@ -13,11 +12,6 @@ DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
 
 verify_key = nacl.signing.VerifyKey(bytes.fromhex(PUBLIC_KEY))
 
-
-# =========================================================
-# コマンド登録
-# 1015対策のため、起動時には実行しない
-# =========================================================
 
 def register_command():
     if not DISCORD_TOKEN:
@@ -55,61 +49,35 @@ def register_command():
         print("COMMAND REGISTRATION ERROR:", repr(e))
 
 
-# =========================================================
-# ボタンを押した後のメッセージ送信
-# =========================================================
-
 def send_messages(application_id, interaction_token):
 
     print("SEND_MESSAGES START")
 
-    url = (
-        f"https://discord.com/api/v10/webhooks/"
-        f"{application_id}/{interaction_token}"
-    )
+    url = f"https://discord.com/api/v10/webhooks/{application_id}/{interaction_token}"
 
     print("WEBHOOK URL CREATED")
+    print("SENDING MESSAGE")
 
-    for i in range(3):
+    try:
+        response = requests.post(
+            url,
+            json={
+                "content": "こんにちは！",
+                "allowed_mentions": {
+                    "parse": []
+                }
+            },
+            timeout=5
+        )
 
-        time.sleep(1)
+        print("MESSAGE STATUS:", response.status_code)
+        print("MESSAGE RESPONSE:", response.text)
 
-        print("SENDING MESSAGE:", i + 1)
-
-        try:
-
-            response = requests.post(
-                url,
-                json={
-                    "content": "こんにちは！",
-                    "allowed_mentions": {
-                        "parse": []
-                    }
-                },
-                timeout=5
-            )
-
-            print("MESSAGE STATUS:", response.status_code)
-            print("MESSAGE RESPONSE:", response.text)
-
-        except requests.exceptions.Timeout:
-
-            print("SEND ERROR: REQUEST TIMEOUT")
-
-        except requests.exceptions.RequestException as e:
-
-            print("SEND ERROR:", repr(e))
-
-        except Exception as e:
-
-            print("SEND ERROR:", repr(e))
+    except Exception as e:
+        print("SEND ERROR:", repr(e))
 
     print("SEND_MESSAGES END")
 
-
-# =========================================================
-# Discord Interaction
-# =========================================================
 
 @app.route("/discord", methods=["POST"])
 def discord():
@@ -121,51 +89,25 @@ def discord():
     body = request.data
 
     if not signature or not timestamp:
-
-        print("ERROR: SIGNATURE OR TIMESTAMP MISSING")
-
         return "Bad Request", 401
 
     try:
-
         verify_key.verify(
             timestamp.encode() + body,
             bytes.fromhex(signature)
         )
-
     except Exception as e:
-
         print("SIGNATURE ERROR:", repr(e))
-
         return "Invalid request signature", 401
 
-    try:
-
-        data = request.get_json()
-
-    except Exception as e:
-
-        print("JSON ERROR:", repr(e))
-
-        return "Bad Request", 400
-
-
-    # =====================================================
-    # Discordの接続確認
-    # =====================================================
+    data = request.get_json()
 
     if data.get("type") == 1:
-
         print("PING RECEIVED")
 
         return jsonify({
             "type": 1
         })
-
-
-    # =====================================================
-    # /test
-    # =====================================================
 
     if (
         data.get("type") == 2
@@ -198,16 +140,9 @@ def discord():
             }
         })
 
-
-    # =====================================================
-    # 実行ボタン
-    # =====================================================
-
     if data.get("type") == 3:
 
-        custom_id = data.get(
-            "data", {}
-        ).get("custom_id")
+        custom_id = data.get("data", {}).get("custom_id")
 
         print("BUTTON CUSTOM ID:", custom_id)
 
@@ -228,13 +163,6 @@ def discord():
                 "type": 6
             })
 
-
-    # =====================================================
-    # その他
-    # =====================================================
-
-    print("UNKNOWN INTERACTION")
-
     return jsonify({
         "type": 4,
         "data": {
@@ -246,19 +174,11 @@ def discord():
     })
 
 
-# =========================================================
-# Render確認用
-# =========================================================
-
 @app.route("/", methods=["GET"])
 def home():
-
     return "Discord app is running!"
 
 
-# =========================================================
-# 重要
-# 起動時のコマンド登録はしない
-# =========================================================
-
+# 1015対策
+# コマンド登録は停止中
 # register_command()
