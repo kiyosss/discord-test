@@ -48,7 +48,7 @@ def register_command():
 def send_messages(application_id, interaction_token):
     url = f"https://discord.com/api/v10/webhooks/{application_id}/{interaction_token}"
 
-    for i in range(5):  # ← ここが送信回数
+    for i in range(3):  # ← ここが送信回数
         time.sleep(1)
 
         response = requests.post(
