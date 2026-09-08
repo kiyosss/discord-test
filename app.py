@@ -11,12 +11,22 @@ PUBLIC_KEY = "7ff356b89d1ae3cb67e1eb9ff04ff5017eb743c2c470ae4c12b5d9254e522cc1"
 APPLICATION_ID = "1546095227943649380"
 DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
 
+# =========================
+# 送信回数
+# =========================
+SEND_COUNT = 3
+
+# =========================
+# 送信間隔（秒）
+# =========================
+SEND_INTERVAL = 1
+
 verify_key = nacl.signing.VerifyKey(bytes.fromhex(PUBLIC_KEY))
 
 
 def register_command():
     if not DISCORD_TOKEN:
-        print("ERROR: DISCORD_TOKEN is not set")
+        print("ERROR: DISCORD_TOKEN is not set", flush=True)
         return
 
     url = f"https://discord.com/api/v10/applications/{APPLICATION_ID}/commands"
@@ -41,24 +51,37 @@ def register_command():
         json=commands
     )
 
-    print("COMMAND REGISTRATION STATUS:", response.status_code)
-    print("COMMAND REGISTRATION RESPONSE:", response.text)
+    print("COMMAND REGISTRATION STATUS:", response.status_code, flush=True)
+    print("COMMAND REGISTRATION RESPONSE:", response.text, flush=True)
 
 
 def send_messages(application_id, interaction_token):
     url = f"https://discord.com/api/v10/webhooks/{application_id}/{interaction_token}"
 
-    for _ in range(3):
-        time.sleep(1)
+    for i in range(SEND_COUNT):
+        time.sleep(SEND_INTERVAL)
 
         response = requests.post(
             url,
             json={
-                "content": "こんにちは！"
-            }
+                "content": "こんにちは！",
+                "allowed_mentions": {
+                    "parse": ["everyone"]
+                }
+            },
+            timeout=10
         )
 
-        print("MESSAGE STATUS:", response.status_code)
+        print(
+            f"MESSAGE {i + 1}/{SEND_COUNT} STATUS:",
+            response.status_code,
+            flush=True
+        )
+        print(
+            "MESSAGE RESPONSE:",
+            response.text,
+            flush=True
+        )
 
 
 @app.route("/discord", methods=["POST"])
@@ -130,7 +153,7 @@ def discord():
     return jsonify({
         "type": 4,
         "data": {
-            "content": "こんにちは！"
+            "content": "不明な操作です。"
         }
     })
 
@@ -140,5 +163,12 @@ def home():
     return "Discord app is running!"
 
 
-# 起動時に /test を登録
-register_command()
+# 429が出ている場合はコメントアウト
+# register_command()
+
+
+if __name__ == "__main__":
+    app.run(
+        host="0.0.0.0",
+        port=int(os.environ.get("PORT", 5000))
+    )
