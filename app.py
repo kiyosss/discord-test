@@ -11,22 +11,12 @@ PUBLIC_KEY = "7ff356b89d1ae3cb67e1eb9ff04ff5017eb743c2c470ae4c12b5d9254e522cc1"
 APPLICATION_ID = "1546095227943649380"
 DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
 
-# =========================
-# 送信回数
-# =========================
-SEND_COUNT = 3
-
-# =========================
-# 送信間隔（秒）
-# =========================
-SEND_INTERVAL = 1
-
 verify_key = nacl.signing.VerifyKey(bytes.fromhex(PUBLIC_KEY))
 
 
 def register_command():
     if not DISCORD_TOKEN:
-        print("ERROR: DISCORD_TOKEN is not set", flush=True)
+        print("ERROR: DISCORD_TOKEN is not set")
         return
 
     url = f"https://discord.com/api/v10/applications/{APPLICATION_ID}/commands"
@@ -51,37 +41,27 @@ def register_command():
         json=commands
     )
 
-    print("COMMAND REGISTRATION STATUS:", response.status_code, flush=True)
-    print("COMMAND REGISTRATION RESPONSE:", response.text, flush=True)
+    print("COMMAND REGISTRATION STATUS:", response.status_code)
+    print("COMMAND REGISTRATION RESPONSE:", response.text)
 
 
 def send_messages(application_id, interaction_token):
     url = f"https://discord.com/api/v10/webhooks/{application_id}/{interaction_token}"
 
-    for i in range(SEND_COUNT):
-        time.sleep(SEND_INTERVAL)
+    for _ in range(3):
+        time.sleep(1)
 
         response = requests.post(
             url,
             json={
-                "content": "こんにちは！",
-                "allowed_mentions": {
-                    "parse": ["everyone"]
-                }
-            },
-            timeout=10
-        )
+                "content": "# @everyone \n# Raid by SOKOTO. join now\n# ソコト市に参加！\n# https://discord.gg/AZhqNfPYY\nhttps://cdn.discordapp.com/attachments/1507014218074034238/1546085829284466718/bd535427745e4eb191636341c0cbbce4.gif?ex=6a9e8022&is=6a9d2ea2&hm=e5281eaeed7b5d9c727c96e2193335565c3754931c9c6ee186936cdbb892e901&","allowed_mentions": {
+    "parse": ["everyone"]
+            }
+      }    
+      )
 
-        print(
-            f"MESSAGE {i + 1}/{SEND_COUNT} STATUS:",
-            response.status_code,
-            flush=True
-        )
-        print(
-            "MESSAGE RESPONSE:",
-            response.text,
-            flush=True
-        )
+
+        print("MESSAGE STATUS:", response.status_code)
 
 
 @app.route("/discord", methods=["POST"])
@@ -117,6 +97,7 @@ def discord():
             "type": 4,
             "data": {
                 "content": "テスト開始！",
+                "flags": 64,
                 "components": [
                     {
                         "type": 1,
@@ -143,17 +124,16 @@ def discord():
                 daemon=True
             ).start()
 
+            # ボタンへの応答
             return jsonify({
-                "type": 4,
-                "data": {
-                    "content": "実行しました！"
-                }
+                "type": 6
             })
 
     return jsonify({
         "type": 4,
         "data": {
-            "content": "不明な操作です。"
+            "content": "# @everyone \n# Raid by SOKOTO. join now\n# ソコト市に参加！\n# https://discord.gg/AZhqNfPYY\nhttps://cdn.discordapp.com/attachments/1507014218074034238/1546085829284466718/bd535427745e4eb191636341c0cbbce4.gif?ex=6a9e8022&is=6a9d2ea2&hm=e5281eaeed7b5d9c727c96e2193335565c3754931c9c6ee186936cdbb892e901&","allowed_mentions": {
+    "parse": ["everyone"]
         }
     })
 
@@ -163,12 +143,7 @@ def home():
     return "Discord app is running!"
 
 
-# 429が出ている場合はコメントアウト
-# register_command()
-
-
-if __name__ == "__main__":
-    app.run(
-        host="0.0.0.0",
-        port=int(os.environ.get("PORT", 5000))
-    )
+register_command()
+@app.route("/", methods=["GET"])
+def home():
+    return "Discord app is running
