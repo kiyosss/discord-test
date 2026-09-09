@@ -56,11 +56,7 @@ def send_messages(application_id, interaction_token):
 
     url = f"https://discord.com/api/v10/webhooks/{application_id}/{interaction_token}"
 
-    print("WEBHOOK URL CREATED")
-
     for i in range(3):
-
-        time.sleep(1)
 
         print("SENDING MESSAGE:", i + 1)
 
@@ -73,7 +69,7 @@ def send_messages(application_id, interaction_token):
                         "parse": []
                     }
                 },
-                timeout=5
+                timeout=10
             )
 
             print("MESSAGE STATUS:", response.status_code)
@@ -81,6 +77,9 @@ def send_messages(application_id, interaction_token):
 
         except Exception as e:
             print("SEND ERROR:", repr(e))
+
+        if i < 2:
+            time.sleep(1)
 
     print("SEND_MESSAGES END")
 
@@ -110,16 +109,12 @@ def discord():
 
     if data.get("type") == 1:
         print("PING RECEIVED")
-
-        return jsonify({
-            "type": 1
-        })
+        return jsonify({"type": 1})
 
     if (
         data.get("type") == 2
         and data.get("data", {}).get("name") == "test"
     ):
-
         print("TEST COMMAND RECEIVED")
 
         return jsonify({
@@ -164,9 +159,7 @@ def discord():
                 )
             ).start()
 
-            return jsonify({
-                "type": 6
-            })
+            return jsonify({"type": 6})
 
     return jsonify({
         "type": 4,
