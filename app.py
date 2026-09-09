@@ -161,8 +161,7 @@ def discord():
                 args=(
                     APPLICATION_ID,
                     data["token"]
-                ),
-                daemon=True
+                )
             ).start()
 
             return jsonify({
