@@ -3,6 +3,7 @@ import nacl.signing
 import os
 import requests
 import threading
+import time
 
 app = Flask(__name__)
 
@@ -56,25 +57,30 @@ def send_messages(application_id, interaction_token):
     url = f"https://discord.com/api/v10/webhooks/{application_id}/{interaction_token}"
 
     print("WEBHOOK URL CREATED")
-    print("SENDING MESSAGE")
 
-    try:
-        response = requests.post(
-            url,
-            json={
-                "content": "こんにちは！",
-                "allowed_mentions": {
-                    "parse": []
-                }
-            },
-            timeout=5
-        )
+    for i in range(3):
 
-        print("MESSAGE STATUS:", response.status_code)
-        print("MESSAGE RESPONSE:", response.text)
+        time.sleep(1)
 
-    except Exception as e:
-        print("SEND ERROR:", repr(e))
+        print("SENDING MESSAGE:", i + 1)
+
+        try:
+            response = requests.post(
+                url,
+                json={
+                    "content": "こんにちは！",
+                    "allowed_mentions": {
+                        "parse": []
+                    }
+                },
+                timeout=5
+            )
+
+            print("MESSAGE STATUS:", response.status_code)
+            print("MESSAGE RESPONSE:", response.text)
+
+        except Exception as e:
+            print("SEND ERROR:", repr(e))
 
     print("SEND_MESSAGES END")
 
@@ -180,5 +186,5 @@ def home():
 
 
 # 1015対策
-# コマンド登録は停止中
+# 起動時のコマンド登録は停止中
 # register_command()
