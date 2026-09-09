@@ -69,7 +69,7 @@ def send_messages(application_id, interaction_token):
                         "parse": []
                     }
                 },
-                timeout=10
+                timeout=3
             )
 
             print("MESSAGE STATUS:", response.status_code)
